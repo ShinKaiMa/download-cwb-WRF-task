@@ -28,4 +28,17 @@ export class CrawlerUtils{
             return false;
         }
     }
+
+    public static async loadJSON(sourcePath:string):Promise<any>{
+        return new Promise((resolve, reject) => {
+            fs.readFile(sourcePath, (error, data) => {  
+                if (error){
+                    reject(error);
+                }
+                let json = JSON.parse(data.toString('utf8'));
+                resolve(json);
+                console.log(json);
+            });
+        });
+    }
 }
