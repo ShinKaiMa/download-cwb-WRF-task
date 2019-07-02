@@ -2,23 +2,23 @@
 import axios from "axios";
 import * as fs from 'fs';
 import * as path from 'path';
-import {CrawlerUtils} from '../utils/CrawlerUtils';
+import { CrawlerUtil } from '../utils/CrawlerUtil';
 
 class CrawlGribDataWorker {
     constructor(config) {
-        this.targetURL = config.targetURL;
-        this.localRepoPath = config.localGribDestination;
-        if (!this.targetURL.includes("Authorization")) {
-            throw new Error("Please check your open data json file URL, it should includes authorization token.");
+        this.targetHourString = config.targetHourString;
+        this.localRepoPath = config.localRepoPath;
+        if (!this.targetHourString) {
+            throw new Error("Target hour param missing.");
         }
     }
-    private targetURL: string;
+    private targetHour: number;
     private localRepoPath: string;
     private targetHourString: string;
     // can load from config in futeure
     private tmpJSONFileName = `tmp_${this.targetHourString}.json`;
     private descrptJSONBaseURL: string = `https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=CWB-6EEFC71A-2A8A-4F48-B579-930516FD5A33&downloadType=WEB&format=JSON`;
-    private CWB_WRF_3KM_BASE_URL: string = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2`;
+    private CWB_WRF_3KM_GRB_URL: string = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2`;
     private CWB_WRF_3KM_GRB_FILE_NAME: string = `CWB_WRF_3KM_${this.targetHourString}.grb2`;
     private availableHours: number[] = [0, 6, 12, 18];
     private repoRoot: string = "D:\\CWB-GRB-WRF-3KM";
@@ -26,7 +26,7 @@ class CrawlGribDataWorker {
 
     async getGRB(): Promise<any> {
         try {
-            await CrawlerUtils.downloadFileToPath(this.descrptJSONBaseURL,path.join(this.repoRoot,this.tmpJSONFileName));
+            await CrawlerUtil.downloadFileToPath(this.descrptJSONBaseURL, path.join(this.repoRoot, this.tmpJSONFileName));
             fs.readFile
         }
         catch (error) {
@@ -34,39 +34,32 @@ class CrawlGribDataWorker {
         }
     }
 
-    async downloadFileToPath(url: string, localPath: string) {
-        try {
-            let response = await axios.get(url, { responseType: "stream" });
-            response.data.pipe(fs.createWriteStream(localPath));
-        }
-        catch (error) {
-            console.log(error)
-        }
-    }
 
     /*
     * fetch lastes grib data from CWB open data
     */
-    async fetch() {
+    public async fetchGRB(): Promise<void> {
         try {
             // check need to download or not
             // get latest grb local repositiry path and ensure it exist
             let nearestTimeDir = this.getNearestTimeDir();
             // check directory is exist
-            if(!await CrawlerUtils.isPathExist(nearestTimeDir)){
-                await CrawlerUtils.ensureDir(nearestTimeDir);
+            if (!await CrawlerUtil.isPathExist(nearestTimeDir)) {
+                await CrawlerUtil.ensureDir(nearestTimeDir);
             }
             // check grb is exist
-            let grbDir = path.join(nearestTimeDir,this.CWB_WRF_3KM_GRB_FILE_NAME);
-            if(await CrawlerUtils.isPathExist(grbDir)){
+            let grbDir = path.join(nearestTimeDir, this.CWB_WRF_3KM_GRB_FILE_NAME);
+            if (await CrawlerUtil.isPathExist(grbDir)) {
                 process.exit(0);
-            }else{
-                await CrawlerUtils.downloadFileToPath(this.descrptJSONBaseURL,path.join(this.repoRoot,this.tmpJSONFileName))
+            } else {
+                await CrawlerUtil.downloadFileToPath(this.descrptJSONBaseURL, path.join(this.repoRoot, this.tmpJSONFileName))
             }
             // get descript json
-            let response = await axios.get(this.targetURL, { responseType: "stream" });
-            response.data.pipe(fs.createWriteStream(this.localRepoPath + this.tmpJSONFileName));
+            let localTMPJSONDir = path.join(this.localRepoPath, this.tmpJSONFileName);
+            let response = await axios.get(this.CWB_WRF_3KM_GRB_URL, { responseType: "stream" });
+            response.data.pipe(fs.createWriteStream(localTMPJSONDir));
 
+            let descriptJSON = await CrawlerUtil.loadJSON(localTMPJSONDir);
         }
         catch (error) {
             console.log(error)
@@ -74,7 +67,7 @@ class CrawlGribDataWorker {
     }
 
 
-    private getNearestTimeDir(): string {
+    public getNearestTimeDir(): string {
         // get UTC date
         let presentDate = new Date();
         presentDate.setHours(presentDate.getHours() - 8);
@@ -82,7 +75,14 @@ class CrawlGribDataWorker {
         // get latest hour of cwb open data grib file
         // lag hour of forcast publish time is needed
         let presentHour = presentDate.getHours();
+        // approach nearest probably available grb hour by shift {lagHour}
+        // {lagHour}(unit: hour) means the period between forcast start time and forcast publish time
         let latestGRBHour = presentHour - this.lagHour
+        // if latestGRBHour < 0, standardize it to yesterday hour (i.e : -2 o'clock -> 22 o'clock (yesterday))
+        if (latestGRBHour < 0) {
+            latestGRBHour = 24 + latestGRBHour;
+        }
+        // start to calculate nearest availble forcast hour
         let largestPeriod: number = Infinity;
         let nearestHour: number = undefined;
         for (let hour of this.availableHours) {

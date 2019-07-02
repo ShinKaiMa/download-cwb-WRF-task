@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import mkdirp from 'mkdirp';
 import axios from "axios";
-export class CrawlerUtils{
+export class CrawlerUtil{
     public static async downloadFileToPath(url: string, localPath: string) {
         try {
             let response = await axios.get(url, { responseType: "stream" });
@@ -37,8 +37,8 @@ export class CrawlerUtils{
                 }
                 let json = JSON.parse(data.toString('utf8'));
                 resolve(json);
-                console.log(json);
             });
         });
     }
+
 }
