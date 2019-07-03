@@ -5,12 +5,15 @@ async function test(){
     // console.log(JSON.stringify(test))
 
     // await CrawlerUtil.remove("D:\\CWB-WRF-Download-Task\\test.txt")
-    try{
-        await CrawlerUtil.ensureDir("D:\\CWB-GRB-WRF-3KM\\test")
-    }
-    catch(error){
-        console.log(error)
-    }
+
+    // try{
+    //     await CrawlerUtil.ensureDir("D:\\CWB-GRB-WRF-3KM\\test")
+    // }
+    // catch(error){
+    //     console.log(error)
+    // }
+    var bool = await CrawlerUtil.isPathExist("D:/CWB-GRB-WRF-3KM")
+    console.log(bool)
 }
 
 test()

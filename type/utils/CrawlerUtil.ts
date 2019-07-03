@@ -27,9 +27,12 @@ export class CrawlerUtil {
 
     public static async isPathExist(directory: string): Promise<boolean> {
         try {
+            console.log('123')
+            console.log('123'+typeof(fs.promises.access))
             await fs.promises.access(directory);
             return true;
         } catch (error) {
+            console.log(error)
             return false;
         }
     }

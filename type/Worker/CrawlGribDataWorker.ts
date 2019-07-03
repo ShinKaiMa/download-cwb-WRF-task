@@ -3,37 +3,40 @@ import axios from "axios";
 import * as fs from 'fs';
 import * as path from 'path';
 import { CrawlerUtil } from '../utils/CrawlerUtil';
+import {logger} from '../logger/logger';
 
 class CrawlGribDataWorker {
     constructor(config) {
         this.targetHourString = config.targetHourString;
         this.localRootRepoDir = config.localRootRepoDir;
-        if (!this.targetHourString || !this.localRootRepoDir) {
-            throw new Error("Param: targetHourString or localRepoPath is needed.");
+        this.authToken = config.authToken;
+        if (!this.targetHourString || !this.localRootRepoDir || !this.authToken) {
+            throw new Error("Param: auth token, targetHourString or localRepoPath is needed.");
         }
     }
     private localRootRepoDir: string;
     private targetHourString: string;
+    private authToken: string;
     // can load from config in future
     public tmpJSONFileName = `tmp_${this.targetHourString}.json`;
-    private descrptJSONBaseURL: string = `https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=CWB-6EEFC71A-2A8A-4F48-B579-930516FD5A33&downloadType=WEB&format=JSON`;
-    private CWB_WRF_3KM_GRB_URL: string = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2`;
-    private CWB_WRF_3KM_GRB_FILE_NAME: string = `CWB_WRF_3KM_${this.targetHourString}.grb2`;
+    private descrptJSONBaseURL: string
+    private CWB_WRF_3KM_GRB_URL: string
+    private CWB_WRF_3KM_GRB_FILE_NAME: string
     private availableHours: number[] = [0, 6, 12, 18];
     private lagHour: number = 4;
 
-    public init(){
+    private init(){
         this.tmpJSONFileName = `tmp_${this.targetHourString}.json`;
-        this.descrptJSONBaseURL =`https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=CWB-6EEFC71A-2A8A-4F48-B579-930516FD5A33&downloadType=WEB&format=JSON`;
-        this.CWB_WRF_3KM_GRB_URL = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2`;
+        this.descrptJSONBaseURL =`https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=${this.authToken}&downloadType=WEB&format=JSON`;
+        this.CWB_WRF_3KM_GRB_URL = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2?Authorization=${this.authToken}`;
         this.CWB_WRF_3KM_GRB_FILE_NAME = `CWB_WRF_3KM_${this.targetHourString}.grb2`;
-
     }
 
     /*
     * fetch lastes grib data from CWB open data
     */
     public async fetchGRB(): Promise<void> {
+        this.init();
         let nearestTimeDir = this.getNearestTimeDir();
         let localGRBDir = path.join(nearestTimeDir, this.CWB_WRF_3KM_GRB_FILE_NAME);
         let tmpJSONDir = path.join(nearestTimeDir, this.tmpJSONFileName);
@@ -43,11 +46,13 @@ class CrawlGribDataWorker {
             if (!await CrawlerUtil.isPathExist(nearestTimeDir)) await CrawlerUtil.ensureDir(nearestTimeDir);
             // check grb is exist
             if (await CrawlerUtil.isPathExist(localGRBDir)) {
+                logger.info(localGRBDir + " already exist. skip.")
                 process.exit(0);
             }
             // get grib data descript json
 
-            console.log(`Downloading ${this.descrptJSONBaseURL} to ${tmpJSONDir}`)
+            logger.info(`Downloading ${this.descrptJSONBaseURL.replace(this.authToken,"*****")} to ${tmpJSONDir}`);
+            // console.log(`Downloading ${this.descrptJSONBaseURL} to ${tmpJSONDir}`)
             await CrawlerUtil.downloadFileToPath(this.descrptJSONBaseURL, tmpJSONDir)
 
             let descriptJSON = await CrawlerUtil.loadJSON(tmpJSONDir);
@@ -56,29 +61,34 @@ class CrawlGribDataWorker {
             // compare remote file generate time
             let localGRBTimePathSeg:string[] = nearestTimeDir.split(path.sep);
             let remoteRunTimeSeg:string[] = runTime.replace("Z","").split(" ");
-            console.log("localGRBTimePathSeg: " + localGRBTimePathSeg);
-            console.log("remoteRunTimeSeg: " + remoteRunTimeSeg);
+            // console.log("localGRBTimePathSeg: " + localGRBTimePathSeg);
+            // console.log("remoteRunTimeSeg: " + remoteRunTimeSeg);
 
             // download grib
-            if(Number(localGRBTimePathSeg[2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[3]) >= Number(remoteRunTimeSeg[1])){
-                console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${localGRBDir}`)
+            if(Number(localGRBTimePathSeg[localGRBTimePathSeg.length-2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length-1]) >= Number(remoteRunTimeSeg[1])){
+                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"*****")} to ${localGRBDir}`);
+                // console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${localGRBDir}`)
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL,localGRBDir);
             }
             // case of local repository do not have older file
             else if(!CrawlerUtil.isPathExist(path.join(this.localRootRepoDir,remoteRunTimeSeg[0],remoteRunTimeSeg[1]))){
                 let olderGRBDir = path.join(this.localRootRepoDir,remoteRunTimeSeg[0],remoteRunTimeSeg[1],this.CWB_WRF_3KM_GRB_FILE_NAME);
-                console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${olderGRBDir}`)
+                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"*****")} to ${olderGRBDir}`)
+                // console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${olderGRBDir}`)
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL,olderGRBDir);
             }
         }
         catch (error) {
-            console.log(error)
+            logger.error(error)
+            // console.log(error)
             if(await CrawlerUtil.isPathExist(tmpJSONDir)){
-                console.log('del1')
+            logger.error('del1')
+            // console.log('del1')
                 await CrawlerUtil.remove(tmpJSONDir)
             }
             if(await CrawlerUtil.isPathExist(localGRBDir)){
-                console.log('del2')
+            logger.error('del2')
+            // console.log('del2')
                 await CrawlerUtil.remove(localGRBDir)
             }
         }
