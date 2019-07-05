@@ -1,3 +1,4 @@
 node_modules
 src
 logs
+type/config/config.env.ts

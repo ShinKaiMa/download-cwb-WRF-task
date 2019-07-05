@@ -1,4 +1,5 @@
 import {CrawlGribDataWorker} from '../Worker/CrawlGribDataWorker'
-var worker = new CrawlGribDataWorker({targetHourString:'00'});
-
-console.log('123: '+worker.getNearestTimeDir());
+var localGRBRootRepoDir = "0"
+var authToken = "0"
+var worker = new CrawlGribDataWorker({targetHourString:'00',localGRBRootRepoDir:localGRBRootRepoDir,authToken:authToken});
+worker.simuAsync();

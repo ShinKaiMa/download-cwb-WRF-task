@@ -3,31 +3,34 @@ import axios from "axios";
 import * as fs from 'fs';
 import * as path from 'path';
 import { CrawlerUtil } from '../utils/CrawlerUtil';
-import {logger} from '../logger/logger';
+import { logger } from '../logger/logger';
+
+interface CrawlGribDataWorkerConfig{
+    targetHourString:string,
+    localGRBRootRepoDir:string,
+    authToken:string
+}
 
 class CrawlGribDataWorker {
-    constructor(config) {
+    constructor(config:CrawlGribDataWorkerConfig) {
         this.targetHourString = config.targetHourString;
-        this.localRootRepoDir = config.localRootRepoDir;
+        this.localGRBRootRepoDir = config.localGRBRootRepoDir;
         this.authToken = config.authToken;
-        if (!this.targetHourString || !this.localRootRepoDir || !this.authToken) {
-            throw new Error("Param: auth token, targetHourString or localRepoPath is needed.");
-        }
     }
-    private localRootRepoDir: string;
+    private localGRBRootRepoDir: string;
     private targetHourString: string;
     private authToken: string;
     // can load from config in future
-    public tmpJSONFileName = `tmp_${this.targetHourString}.json`;
+    private tmpJSONFileName = `tmp_${this.targetHourString}.json`;
     private descrptJSONBaseURL: string
     private CWB_WRF_3KM_GRB_URL: string
     private CWB_WRF_3KM_GRB_FILE_NAME: string
     private availableHours: number[] = [0, 6, 12, 18];
     private lagHour: number = 4;
 
-    private init(){
+    private init() {
         this.tmpJSONFileName = `tmp_${this.targetHourString}.json`;
-        this.descrptJSONBaseURL =`https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=${this.authToken}&downloadType=WEB&format=JSON`;
+        this.descrptJSONBaseURL = `https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/M-A0064-${this.targetHourString}?Authorization=${this.authToken}&downloadType=WEB&format=JSON`;
         this.CWB_WRF_3KM_GRB_URL = `https://opendata.cwb.gov.tw/fileapi/opendata/MIC/M-A0064-${this.targetHourString}.grb2?Authorization=${this.authToken}`;
         this.CWB_WRF_3KM_GRB_FILE_NAME = `CWB_WRF_3KM_${this.targetHourString}.grb2`;
     }
@@ -40,6 +43,10 @@ class CrawlGribDataWorker {
         let nearestTimeDir = this.getNearestTimeDir();
         let localGRBDir = path.join(nearestTimeDir, this.CWB_WRF_3KM_GRB_FILE_NAME);
         let tmpJSONDir = path.join(nearestTimeDir, this.tmpJSONFileName);
+        logger.debug(`Starting download ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"****")}`);
+        logger.debug("nearestTimeDir: " + nearestTimeDir);
+        logger.debug("localGRBDir: " + localGRBDir);
+        logger.debug("tmpJSONDir: " + tmpJSONDir);
         try {
             // check need to download or not
             // get latest grb local repositiry path
@@ -51,45 +58,45 @@ class CrawlGribDataWorker {
             }
             // get grib data descript json
 
-            logger.info(`Downloading ${this.descrptJSONBaseURL.replace(this.authToken,"*****")} to ${tmpJSONDir}`);
-            // console.log(`Downloading ${this.descrptJSONBaseURL} to ${tmpJSONDir}`)
+            logger.info(`Downloading ${this.descrptJSONBaseURL.replace(this.authToken, "*****")} to ${tmpJSONDir}`);
             await CrawlerUtil.downloadFileToPath(this.descrptJSONBaseURL, tmpJSONDir)
 
             let descriptJSON = await CrawlerUtil.loadJSON(tmpJSONDir);
             let runTime: string = descriptJSON.cwbopendata.dataset.datasetInfo.parameterSet[3].parameterValue
             if (!runTime) throw new Error("Can not get run time from open data descript json.");
             // compare remote file generate time
-            let localGRBTimePathSeg:string[] = nearestTimeDir.split(path.sep);
-            let remoteRunTimeSeg:string[] = runTime.replace("Z","").split(" ");
-            // console.log("localGRBTimePathSeg: " + localGRBTimePathSeg);
-            // console.log("remoteRunTimeSeg: " + remoteRunTimeSeg);
+            let localGRBTimePathSeg: string[] = nearestTimeDir.split(path.sep);
+            let remoteRunTimeSeg: string[] = runTime.replace("Z", "").split(" ");
 
             // download grib
-            if(Number(localGRBTimePathSeg[localGRBTimePathSeg.length-2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length-1]) >= Number(remoteRunTimeSeg[1])){
-                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"*****")} to ${localGRBDir}`);
-                // console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${localGRBDir}`)
-                await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL,localGRBDir);
+            if (Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]) >= Number(remoteRunTimeSeg[1])) {
+                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${localGRBDir}`);
+                await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, localGRBDir);
+                logger.info(`Download ${localGRBDir} successfully`);
             }
             // case of local repository do not have older file
-            else if(!CrawlerUtil.isPathExist(path.join(this.localRootRepoDir,remoteRunTimeSeg[0],remoteRunTimeSeg[1]))){
-                let olderGRBDir = path.join(this.localRootRepoDir,remoteRunTimeSeg[0],remoteRunTimeSeg[1],this.CWB_WRF_3KM_GRB_FILE_NAME);
-                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"*****")} to ${olderGRBDir}`)
-                // console.log(`Downloading ${this.CWB_WRF_3KM_GRB_URL} to ${olderGRBDir}`)
-                await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL,olderGRBDir);
+            else if (!CrawlerUtil.isPathExist(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]))) {
+                let olderGRBDir = path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1], this.CWB_WRF_3KM_GRB_FILE_NAME);
+                logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${olderGRBDir}`);
+                await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, olderGRBDir);
+                logger.info(`Download ${olderGRBDir} successfully`);
             }
         }
         catch (error) {
-            logger.error(error)
-            // console.log(error)
-            if(await CrawlerUtil.isPathExist(tmpJSONDir)){
-            logger.error('del1')
-            // console.log('del1')
-                await CrawlerUtil.remove(tmpJSONDir)
+            logger.error(`Error: ${error}`);
+            if (await CrawlerUtil.isPathExist(tmpJSONDir)) {
+                await CrawlerUtil.remove(tmpJSONDir);
+                logger.error(`Exception encountered, delete ${tmpJSONDir}`);
             }
-            if(await CrawlerUtil.isPathExist(localGRBDir)){
-            logger.error('del2')
-            // console.log('del2')
-                await CrawlerUtil.remove(localGRBDir)
+            if (await CrawlerUtil.isPathExist(localGRBDir)) {
+                await CrawlerUtil.remove(localGRBDir);
+                logger.error(`Exception encountered, delete ${localGRBDir}`);
+            }
+        }
+        finally {
+            if (await CrawlerUtil.isPathExist(tmpJSONDir)) {
+                await CrawlerUtil.remove(tmpJSONDir);
+                logger.info(`Delete ${tmpJSONDir}`);
             }
         }
     }
@@ -126,8 +133,21 @@ class CrawlGribDataWorker {
         let month = (presentDate.getMonth() + 1).toString().padStart(2, "0");
         let day = presentDate.getDay().toString().padStart(2, "0")
         let hour = nearestHour.toString().padStart(2, "0")
-        let nearestTimePath = path.join(this.localRootRepoDir, year + month + day, hour);
+        let nearestTimePath = path.join(this.localGRBRootRepoDir, year + month + day, hour);
         return nearestTimePath;
+    }
+
+    public async simuAsync() {
+        let self: CrawlGribDataWorker = this;
+        return new Promise((resolve, reject) => {
+            let second = Math.floor(Math.random()*5)+1;
+            // let second = 1;
+            second *= 1000;
+            setTimeout(function () {
+                // console.log(self.targetHourString + " work! in " + second)
+                resolve();
+            }, second);
+        })
     }
 }
 

@@ -12,8 +12,12 @@ async function test(){
     // catch(error){
     //     console.log(error)
     // }
-    var bool = await CrawlerUtil.isPathExist("D:/CWB-GRB-WRF-3KM")
-    console.log(bool)
+
+    // var bool = await CrawlerUtil.isPathExist("D:/CWB-GRB-WRF-3KM")
+    // console.log(bool)
+
+    var dirs = await CrawlerUtil.getAllDir('D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\Python-repo\\**\\*.py');
+    console.log(dirs)
 }
 
 test()
