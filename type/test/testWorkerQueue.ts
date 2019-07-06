@@ -6,8 +6,8 @@ const localGRBRootRepoDir = "test";
 const authToken = "test";
 
 
-var queue = new WorkerQueue(10, 2);
-for (let num = 1; num <= 10; num++) {
+var queue = new WorkerQueue(12, 2);
+for (let num = 1; num <= 12; num++) {
     let worker = new CrawlGribDataWorker({ targetHourString: num.toString(), localGRBRootRepoDir: localGRBRootRepoDir, authToken: authToken })
     queue.offer(worker);
 }

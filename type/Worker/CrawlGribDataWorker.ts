@@ -140,7 +140,8 @@ class CrawlGribDataWorker {
     public async simuAsync() {
         let self: CrawlGribDataWorker = this;
         return new Promise((resolve, reject) => {
-            let second = Math.floor(Math.random()*5)+1;
+            let second = 2;
+            // let second = Math.floor(Math.random()*5)+1;
             // let second = 1;
             second *= 1000;
             setTimeout(function () {

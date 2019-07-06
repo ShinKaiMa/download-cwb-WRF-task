@@ -1,5 +1,5 @@
 import { CrawlGribDataWorker } from '../Worker/CrawlGribDataWorker'
-import * as ProgressBar  from 'progress'
+import * as ProgressBar from 'progress'
 
 export class WorkerQueue {
     constructor(maxWorkerNum: number, threadNum: number) {
@@ -11,10 +11,12 @@ export class WorkerQueue {
     }
     private maxWorkerNum: number;
     private threadNum: number;
-    private workerQueue: CrawlGribDataWorker[] =[];
+    private workerQueue: CrawlGribDataWorker[] = [];
+    private requestNums: number = 0;
+    private doneNums: number = 0;
     private bar;
 
-    public length():number{
+    public length(): number {
         return this.workerQueue.length;
     }
 
@@ -29,7 +31,8 @@ export class WorkerQueue {
 
     public offer(worker: CrawlGribDataWorker): boolean {
         if (this.workerQueue.length < this.maxWorkerNum) {
-            this.workerQueue.push(worker)
+            this.workerQueue.push(worker);
+            this.requestNums++;
             return true;
         }
         else {
@@ -38,7 +41,7 @@ export class WorkerQueue {
     }
 
     public process() {
-        for (let initDispatchedWorkerNum = 0; initDispatchedWorkerNum <= this.threadNum; initDispatchedWorkerNum++) {
+        for (let initDispatchedWorkerNum = 0; initDispatchedWorkerNum < this.threadNum; initDispatchedWorkerNum++) {
             this.tryDispatchOne();
         }
         // console.log('this.length: ' + this.length)
@@ -47,7 +50,7 @@ export class WorkerQueue {
             incomplete: ' ',
             width: 50,
             total: this.length()
-          });
+        });
     }
 
     private tryDispatchOne() {
@@ -56,15 +59,17 @@ export class WorkerQueue {
             worker.simuAsync().then(() => {
                 // console.log('1 done');
                 this.bar.tick(1);
+                this.doneNums++;
                 this.tryDispatchOne();
             }).catch((error) => {
                 // console.log('1 fail');
                 // console.log(error);
                 this.bar.tick(1);
+                this.doneNums++;
                 this.tryDispatchOne();
             })
-        }else if(!worker && this.workerQueue.length === 0){
-            // console.log('done!');
+        } else if (this.requestNums === this.doneNums) {
+            console.log('complete!');
         }
     }
 }

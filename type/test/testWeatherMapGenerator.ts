@@ -1,4 +1,4 @@
 import {WeatherMapGenerator} from '../Worker/WeatherMapGenerator'
 
-var generator = new WeatherMapGenerator();
-generator.test();
+// var generator = new WeatherMapGenerator();
+// generator.generate();
