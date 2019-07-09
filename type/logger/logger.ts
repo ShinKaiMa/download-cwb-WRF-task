@@ -21,6 +21,6 @@ log4js.configure({
         default: { appenders: ['fileAppenders'], level: 'debug' }
     }
 });
-const logger = log4js.getLogger('ATMO-WeatherMap-Generator');
+const logger = log4js.getLogger('ATMO-Repo');
 
 export{logger};

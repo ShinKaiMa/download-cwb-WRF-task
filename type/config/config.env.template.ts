@@ -3,9 +3,11 @@ interface envConfig {
     localGRBRootRepoDir: string,
     localIMGRootRepoDir: string,
     localPythonSourceCodeRootRepoDir: string,
+    localPythonSourceCodeFilePattern:string,
     targetHourStrings?: string[],
     maxHour: number,
-    increment: number
+    increment: number,
+    threadNum:number
 }
 
 let envConfig: envConfig = {
@@ -13,8 +15,10 @@ let envConfig: envConfig = {
     localGRBRootRepoDir: "your local GRIB file root repository directory to store CWB open data",
     localIMGRootRepoDir: "your local image file root repository directory",
     localPythonSourceCodeRootRepoDir: "your local python script file root repository directory",
+    localPythonSourceCodeFilePattern: "local python script file pattern related to localPythonSourceCodeRootRepoDir,example: /**/**/*.py",
     maxHour: 84,
-    increment: 6
+    increment: 6,
+    threadNum: 2
 }
 
 let targetHourStrings: string[] = []

@@ -35,15 +35,16 @@ class CrawlGribDataWorker {
         this.CWB_WRF_3KM_GRB_FILE_NAME = `CWB_WRF_3KM_${this.targetHourString}.grb2`;
     }
 
-    /*
-    * fetch lastes grib data from CWB open data
+
+   /**
+    * fetch lastes grib data from CWB open data, return fetched local file path.
     */
-    public async fetchGRB(): Promise<void> {
+    public async fetchGRB(): Promise<string> {
         this.init();
         let nearestTimeDir = this.getNearestTimeDir();
         let localGRBDir = path.join(nearestTimeDir, this.CWB_WRF_3KM_GRB_FILE_NAME);
         let tmpJSONDir = path.join(nearestTimeDir, this.tmpJSONFileName);
-        logger.debug(`Starting download ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"****")}`);
+        logger.debug(`Trying to fetch GRB: ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"****")}`);
         logger.debug("nearestTimeDir: " + nearestTimeDir);
         logger.debug("localGRBDir: " + localGRBDir);
         logger.debug("tmpJSONDir: " + tmpJSONDir);
@@ -54,7 +55,7 @@ class CrawlGribDataWorker {
             // check grb is exist
             if (await CrawlerUtil.isPathExist(localGRBDir)) {
                 logger.info(localGRBDir + " already exist. skip.")
-                process.exit(0);
+                return localGRBDir;
             }
             // get grib data descript json
 
@@ -63,24 +64,30 @@ class CrawlGribDataWorker {
 
             let descriptJSON = await CrawlerUtil.loadJSON(tmpJSONDir);
             let runTime: string = descriptJSON.cwbopendata.dataset.datasetInfo.parameterSet[3].parameterValue
+            logger.debug(`get run time from descript JSON file:  ${runTime}`);
             if (!runTime) throw new Error("Can not get run time from open data descript json.");
             // compare remote file generate time
             let localGRBTimePathSeg: string[] = nearestTimeDir.split(path.sep);
+            localGRBTimePathSeg.shift();
             let remoteRunTimeSeg: string[] = runTime.replace("Z", "").split(" ");
-
             // download grib
             if (Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]) >= Number(remoteRunTimeSeg[1])) {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${localGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, localGRBDir);
                 logger.info(`Download ${localGRBDir} successfully`);
+                return localGRBDir;
             }
             // case of local repository do not have older file
-            else if (!CrawlerUtil.isPathExist(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]))) {
+            else if (!await CrawlerUtil.isPathExist(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]))) {
+                CrawlerUtil.ensureDir(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]));
                 let olderGRBDir = path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1], this.CWB_WRF_3KM_GRB_FILE_NAME);
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${olderGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, olderGRBDir);
                 logger.info(`Download ${olderGRBDir} successfully`);
+                return olderGRBDir;
             }
+            logger.warn("return undefined at fetchGRB()");
+            return undefined;
         }
         catch (error) {
             logger.error(`Error: ${error}`);
@@ -131,7 +138,7 @@ class CrawlGribDataWorker {
         }
         let year = presentDate.getFullYear().toString();
         let month = (presentDate.getMonth() + 1).toString().padStart(2, "0");
-        let day = presentDate.getDay().toString().padStart(2, "0")
+        let day = presentDate.getDate().toString().padStart(2, "0")
         let hour = nearestHour.toString().padStart(2, "0")
         let nearestTimePath = path.join(this.localGRBRootRepoDir, year + month + day, hour);
         return nearestTimePath;
