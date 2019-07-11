@@ -124,6 +124,7 @@ class CrawlGribDataWorker {
         // if latestGRBHour < 0, standardize it to yesterday hour (i.e : -2 o'clock -> 22 o'clock (yesterday))
         if (latestGRBHour < 0) {
             latestGRBHour = 24 + latestGRBHour;
+            presentDate.setDate(presentDate.getDate() - 1);
         }
         // start to calculate nearest availble forcast hour
         let largestPeriod: number = Infinity;
