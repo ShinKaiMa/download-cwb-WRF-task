@@ -16,8 +16,14 @@ async function test(){
     // var bool = await CrawlerUtil.isPathExist("D:/CWB-GRB-WRF-3KM")
     // console.log(bool)
 
-    var dirs = await CrawlerUtil.getAllDir('D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\Python-repo\\**\\*.py');
-    console.log(dirs)
+    // var dirs = await CrawlerUtil.getAllDir('D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\Python-repo\\**\\*.py');
+    // console.log(dirs)
+
+    // let fileSize = await CrawlerUtil.getFileSize('D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\GRB-repo\\20190713\\00\\CWB_WRF_3KM_006.grb2')
+    // console.log(fileSize)
+
+    let scriptsPath = ["/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/preccipitation/{Final}nearTW_CWB_WRF_3KM_850_Wind_Precip.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/temperature/{Final}nearTW_CWB_WRF_3KM_SUR_TEMP.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/vorticity/nearTW_CWB_WRF_3KM_700_VOR_BARB.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/windspeed/nearTW_CWB_WRF_3KM_SUR_windSpeed.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/TW/precipitation/TWArea_CWB_WRF_3KM_SUR_PRECIP_BARB.py"]
+    console.log(CrawlerUtil.ensurePrecipScriptsBeLast(scriptsPath))
 }
 
 test()

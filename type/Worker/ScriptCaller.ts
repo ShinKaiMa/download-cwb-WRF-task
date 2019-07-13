@@ -21,9 +21,12 @@ export class ScriptCaller {
     logger.debug(`using ScriptCaller: prefix- ${this.commandPrefix}, source GRB directory: ${this.sourceGRBDir} , target hour string: ${this.targetHourString}`)
     logger.debug(`local Python source code root repo directory: ${this.commandPrefix}`)
     logger.debug(`local Python source code file pattern: ${this.localPythonSourceCodeFilePattern}`)
+    let isGRBNotComplete: boolean = false;
     try {
       let pythonScriptDirs = await CrawlerUtil.getAllDir(this.localPythonSourceCodeRootRepoDir + this.localPythonSourceCodeFilePattern);
-      logger.debug(`python script dirs: ${pythonScriptDirs}`)
+      logger.debug(`python script dirs (before sort): ${pythonScriptDirs}`)
+      pythonScriptDirs = CrawlerUtil.ensurePrecipScriptsBeLast(pythonScriptDirs);
+      logger.debug(`python script dirs (after sort): ${pythonScriptDirs}`)
       for (let pythonScriptDir of pythonScriptDirs) {
         try {
           let IMGOutputDir = this.getIMGOutputDirByGRBDirAndScriptDir(this.sourceGRBDir, pythonScriptDir);
@@ -31,6 +34,7 @@ export class ScriptCaller {
           logger.debug(`IMG Output Dir: ${IMGOutputDir}`)
           // get all png path in IMGOutputDir
           let allIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*.png");
+          // check img is exist or not
           let isNeedToSkip: boolean = false;
           for (let IMGDir of allIMGDirs) {
             // determin img already exist or not
@@ -38,6 +42,7 @@ export class ScriptCaller {
               isNeedToSkip = true;
             }
           }
+          // start to draw
           if (!isNeedToSkip) {
             await CrawlerUtil.execShellCommand(`${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`);
             logger.info(`Complete command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
@@ -45,21 +50,26 @@ export class ScriptCaller {
             logger.info(`Skip command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
           }
         } catch (error) {
+          isGRBNotComplete = true;
           logger.error(`Exception encountered when using command: ${this.commandPrefix} ${pythonScriptDir}`);
           logger.error(error);
-          try {
-            await CrawlerUtil.remove(this.sourceGRBDir)
-            logger.info(`remove surce grib ${this.sourceGRBDir} success.`);
-          } catch (error) {
-            logger.info(`can not remove surce grib ${this.sourceGRBDir}.`);
-          } finally {
-            throw new Error(`${this.sourceGRBDir} maybe not complete.`)
-          }
         }
       }
     } catch (error) {
       logger.error(`Exception encountered when listing all driectory, directory regex: ${this.localPythonSourceCodeRootRepoDir + this.localPythonSourceCodeFilePattern}`);
       logger.error(error);
+    } finally {
+      if (isGRBNotComplete) {
+        try {
+          // TODO sort script list
+          let GRBSize = await CrawlerUtil.getFileSize(this.sourceGRBDir);
+          logger.error(`${this.sourceGRBDir} size: ${GRBSize} bytes, maybe not complete size.`);
+          await CrawlerUtil.remove(this.sourceGRBDir)
+          logger.error(`remove surce grib ${this.sourceGRBDir} success.`);
+        } catch (error) {
+          logger.warn(`can not remove surce grib ${this.sourceGRBDir}.`);
+        }
+      }
     }
   }
 

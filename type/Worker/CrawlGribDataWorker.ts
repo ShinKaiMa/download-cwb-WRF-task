@@ -5,14 +5,14 @@ import * as path from 'path';
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
 
-interface CrawlGribDataWorkerConfig{
-    targetHourString:string,
-    localGRBRootRepoDir:string,
-    authToken:string
+interface CrawlGribDataWorkerConfig {
+    targetHourString: string,
+    localGRBRootRepoDir: string,
+    authToken: string
 }
 
 class CrawlGribDataWorker {
-    constructor(config:CrawlGribDataWorkerConfig) {
+    constructor(config: CrawlGribDataWorkerConfig) {
         this.targetHourString = config.targetHourString;
         this.localGRBRootRepoDir = config.localGRBRootRepoDir;
         this.authToken = config.authToken;
@@ -36,15 +36,15 @@ class CrawlGribDataWorker {
     }
 
 
-   /**
-    * fetch lastes grib data from CWB open data, return fetched local file path.
-    */
+    /**
+     * fetch lastes grib data from CWB open data, return fetched local file path.
+     */
     public async fetchGRB(): Promise<string> {
         this.init();
         let nearestTimeDir = this.getNearestTimeDir();
         let localGRBDir = path.join(nearestTimeDir, this.CWB_WRF_3KM_GRB_FILE_NAME);
         let tmpJSONDir = path.join(nearestTimeDir, this.tmpJSONFileName);
-        logger.debug(`Trying to fetch GRB: ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken,"****")}`);
+        logger.debug(`Trying to fetch GRB: ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "****")}`);
         logger.debug("nearestTimeDir: " + nearestTimeDir);
         logger.debug("localGRBDir: " + localGRBDir);
         logger.debug("tmpJSONDir: " + tmpJSONDir);
@@ -70,24 +70,32 @@ class CrawlGribDataWorker {
             let localGRBTimePathSeg: string[] = nearestTimeDir.split(path.sep);
             localGRBTimePathSeg.shift();
             let remoteRunTimeSeg: string[] = runTime.replace("Z", "").split(" ");
+            logger.debug(`localGRBTimePathSeg: ${localGRBTimePathSeg}`);
+            logger.debug(`remoteRunTimeSeg: ${remoteRunTimeSeg}`);
             // download grib
-            if (Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 2]) >= Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]) >= Number(remoteRunTimeSeg[1])) {
+            // at time matched situation
+            if (Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 2]) === Number(remoteRunTimeSeg[0]) && Number(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]) === Number(remoteRunTimeSeg[1])) {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${localGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, localGRBDir);
                 logger.info(`Download ${localGRBDir} successfully`);
                 return localGRBDir;
             }
-            // case of local repository do not have older file
-            else if (!await CrawlerUtil.isPathExist(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]))) {
-                CrawlerUtil.ensureDir(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]));
+            // case of local repository do not have older file && time not matched situation (use remote run time)
+            else {
                 let olderGRBDir = path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1], this.CWB_WRF_3KM_GRB_FILE_NAME);
+                if (await CrawlerUtil.isPathExist(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]))) {
+                    logger.info(`Older GRB Dir root: ${path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1])} already exist.`)
+                    if (await CrawlerUtil.isPathExist(olderGRBDir)) {
+                        logger.info(`Older GRB file: ${olderGRBDir} already exist. skip download.`)
+                        return olderGRBDir;
+                    }
+                }
+                CrawlerUtil.ensureDir(path.join(this.localGRBRootRepoDir, remoteRunTimeSeg[0], remoteRunTimeSeg[1]));
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${olderGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, olderGRBDir);
                 logger.info(`Download ${olderGRBDir} successfully`);
                 return olderGRBDir;
             }
-            logger.warn("return undefined at fetchGRB()");
-            return undefined;
         }
         catch (error) {
             logger.error(`Error: ${error}`);

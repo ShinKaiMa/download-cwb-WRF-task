@@ -7,7 +7,7 @@ import * as child_process from 'child_process';
 
 
 export class CrawlerUtil {
-    public static async downloadFileToPath(url: string, localPath: string):Promise<void> {
+    public static async downloadFileToPath(url: string, localPath: string): Promise<void> {
         try {
             let response = await axios.get(url, { responseType: "stream" });
             const writer = fs.createWriteStream(localPath)
@@ -94,5 +94,21 @@ export class CrawlerUtil {
                 resolve(stdout);
             })
         })
+    }
+
+    public static getFileSize(path: string): Promise<number> {
+        return new Promise((resolve, reject) => {
+            fs.stat(path, (error, stats) => {
+                if (error) reject(error);
+                resolve(stats["size"]);
+            });
+        })
+    }
+
+    public static ensurePrecipScriptsBeLast(scriptPaths: string[]): string[] {
+        let finalScriptsPath: string[] = [];
+        finalScriptsPath = scriptPaths.filter(scriptPath=>scriptPath.includes("{Final}"));
+        scriptPaths = scriptPaths.filter(scriptPath=>!scriptPath.includes("{Final}"));
+        return scriptPaths.concat(finalScriptsPath)
     }
 }
