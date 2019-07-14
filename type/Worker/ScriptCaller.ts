@@ -50,9 +50,14 @@ export class ScriptCaller {
             logger.info(`Skip command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
           }
         } catch (error) {
-          isGRBNotComplete = true;
-          logger.error(`Exception encountered when using command: ${this.commandPrefix} ${pythonScriptDir}`);
-          logger.error(error);
+          // TODO determine precip continue situ
+          if (!pythonScriptDir.includes("{Final}")) {
+            isGRBNotComplete = true;
+            logger.error(`Exception encountered when using command: ${this.commandPrefix} ${pythonScriptDir}`);
+            logger.error(error);
+          }else{
+            logger.debug(`skip determine var:isGRBNotComplete cause ${pythonScriptDir} includes "{Final}" (precip), var value: ${isGRBNotComplete} `);
+          }
         }
       }
     } catch (error) {
