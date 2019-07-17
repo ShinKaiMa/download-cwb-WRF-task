@@ -10,8 +10,14 @@ db.once('open', async function () {
     let testDataStatus = new DataStatus({
         dataType:"GRB",
         path:"/home/test.png",
-        timeStamp:new Date()
     });
     
-    testDataStatus.save();
+    // DataStatus.find({dataType:"GRB"},(err,docs)=>{
+    //     console.log(err);
+    //     console.log(docs);
+    // });
+    DataStatus.remove({_id:"5d2ae85a0376ed190ce98a4c"},(err)=>{
+        console.log(err)
+    })
+    // testDataStatus.save().then(()=>console.log('save success')).catch(()=>console.log('save fail'));
 })

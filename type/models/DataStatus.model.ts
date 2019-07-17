@@ -6,10 +6,18 @@ export interface IDataStatus extends Document {
   timeStamp: Date;
 }
 
-const DataStatusSchema: Schema = new Schema({
+let DataStatusSchema: Schema = new Schema({
   dataType: { type: String, required: true , index: true},
   path: { type: String, required: true , index: true},
-  timeStamp: { type: Date, required: true , index: true}
+  timeStamp: { type: Date , index: true}
+});
+
+DataStatusSchema.pre<IDataStatus>("save", function (next) {
+  let now = new Date();
+  if (!this.timeStamp) {
+    this.timeStamp = now;
+  }
+  next();
 });
 
 export const DataStatus: Model<IDataStatus> = model<IDataStatus>("DataStatus", DataStatusSchema);
