@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
+import {DataStatus} from '../models/DataStatus.model';
+
 
 interface CrawlGribDataWorkerConfig {
     targetHourString: string,
@@ -78,6 +80,14 @@ class CrawlGribDataWorker {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${localGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, localGRBDir);
                 logger.info(`Download ${localGRBDir} successfully`);
+                let dataStatus = new DataStatus({
+                    dataType:"GRB",
+                    path:localGRBDir,
+                    status:"saved",
+                    byte:await CrawlerUtil.getFileSize(localGRBDir)
+                });
+                await dataStatus.save();
+                logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
                 return localGRBDir;
             }
             // case of local repository do not have older file && time not matched situation (use remote run time)
@@ -94,6 +104,14 @@ class CrawlGribDataWorker {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${olderGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, olderGRBDir);
                 logger.info(`Download ${olderGRBDir} successfully`);
+                let dataStatus = new DataStatus({
+                    dataType:"GRB",
+                    path:olderGRBDir,
+                    status:"saved",
+                    byte:await CrawlerUtil.getFileSize(olderGRBDir)
+                });
+                await dataStatus.save();
+                logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
                 return olderGRBDir;
             }
         }

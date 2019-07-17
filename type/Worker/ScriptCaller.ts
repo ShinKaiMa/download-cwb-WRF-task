@@ -1,8 +1,8 @@
-import * as child_process from 'child_process';
 import * as path from 'path';
 import { envConfig } from '../config/config.env'
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
+import {DataStatus} from '../models/DataStatus.model';
 
 
 export class ScriptCaller {
@@ -46,6 +46,17 @@ export class ScriptCaller {
           if (!isNeedToSkip) {
             await CrawlerUtil.execShellCommand(`${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`);
             logger.info(`Complete command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
+            // get output image directory
+            let IMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + this.targetHourString + "*");
+            logger.debug(`estimate IMGDirs: ${IMGDirs}`)
+            let dataStatus = new DataStatus({
+              dataType:"IMG",
+              path:IMGDirs[0],
+              status:"saved",
+              byte:await CrawlerUtil.getFileSize(IMGDirs[0])
+          });
+          await dataStatus.save();
+          logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
           } else {
             logger.info(`Skip command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
           }
