@@ -82,6 +82,8 @@ class CrawlGribDataWorker {
                 logger.info(`Download ${localGRBDir} successfully`);
                 let dataStatus = new DataStatus({
                     dataType:"GRB",
+                    area:"EA",
+                    contentType:"CWB-WRF-3KM",
                     path:localGRBDir,
                     status:"saved",
                     byte:await CrawlerUtil.getFileSize(localGRBDir)
@@ -106,6 +108,8 @@ class CrawlGribDataWorker {
                 logger.info(`Download ${olderGRBDir} successfully`);
                 let dataStatus = new DataStatus({
                     dataType:"GRB",
+                    area:"EA",
+                    contentType:"CWB-WRF-3KM",
                     path:olderGRBDir,
                     status:"saved",
                     byte:await CrawlerUtil.getFileSize(olderGRBDir)

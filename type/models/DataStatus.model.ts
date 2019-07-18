@@ -2,6 +2,8 @@ import {Document, Schema, Model, model} from "mongoose";
 
 export interface IDataStatus extends Document {
   dataType: string;
+  area:string;
+  contentType:string;
   path: string;
   status:string;
   byte:number;
@@ -10,6 +12,8 @@ export interface IDataStatus extends Document {
 
 let DataStatusSchema: Schema = new Schema({
   dataType: { type: String, required: true , index: true},
+  area:{ type: String, required: true , index: true},
+  contentType:{ type: String, required: true , index: true},
   path: { type: String, required: true , index: true},
   status: {type: String, required: true , index: true},
   byte: {type: Number, required: true , index: true},

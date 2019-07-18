@@ -47,13 +47,19 @@ export class ScriptCaller {
             await CrawlerUtil.execShellCommand(`${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`);
             logger.info(`Complete command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
             // get output image directory
-            let IMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + this.targetHourString + "*");
-            logger.debug(`estimate IMGDirs: ${IMGDirs}`)
+            let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + this.targetHourString + "*");
+            logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
+            let parsedIMGDir = outputIMGDirs[0].split(path.sep);
+            let area = parsedIMGDir[parsedIMGDir.length-3];
+            let contentType = parsedIMGDir[parsedIMGDir.length-2];
+            logger.debug(`parsedIMGDir: ${parsedIMGDir}, area: ${area}, contentType: ${contentType}`);
             let dataStatus = new DataStatus({
               dataType:"IMG",
-              path:IMGDirs[0],
+              area:area,
+              contentType:contentType,
+              path:outputIMGDirs[0],
               status:"saved",
-              byte:await CrawlerUtil.getFileSize(IMGDirs[0])
+              byte:await CrawlerUtil.getFileSize(outputIMGDirs[0])
           });
           await dataStatus.save();
           logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
