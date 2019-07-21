@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
-import {DataStatus} from '../models/DataStatus.model';
+import { DataStatus } from '../models/DataStatus.model';
 
 
 interface CrawlGribDataWorkerConfig {
@@ -80,13 +80,22 @@ class CrawlGribDataWorker {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${localGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, localGRBDir);
                 logger.info(`Download ${localGRBDir} successfully`);
+                let GRBDateString = localGRBTimePathSeg[localGRBTimePathSeg.length - 2]; //format:yyyymmdd (e.g. 20190721)(UTC)
+                let startYear:number = parseInt(GRBDateString.slice(0,4));
+                let startMonth:number = parseInt(GRBDateString.slice(4,6))-1;
+                let startDay:number = parseInt(GRBDateString.slice(6));
+                let startHour = parseInt(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]);
+                let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
                 let dataStatus = new DataStatus({
-                    dataType:"GRB",
-                    area:"EA",
-                    contentType:"CWB-WRF-3KM",
-                    path:localGRBDir,
-                    status:"saved",
-                    byte:await CrawlerUtil.getFileSize(localGRBDir)
+                    dataType: "GRB",
+                    area: "EA",
+                    contentType: "CWB-WRF-3KM",
+                    path: localGRBDir,
+                    status: "saved",
+                    byte: await CrawlerUtil.getFileSize(localGRBDir),
+                    startDate: startDate,
+                    endDate: startDate, //same as startDate (single)
+                    incrementHours: 0
                 });
                 await dataStatus.save();
                 logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
@@ -106,13 +115,23 @@ class CrawlGribDataWorker {
                 logger.info(`Downloading ${this.CWB_WRF_3KM_GRB_URL.replace(this.authToken, "*****")} to ${olderGRBDir}`);
                 await CrawlerUtil.downloadFileToPath(this.CWB_WRF_3KM_GRB_URL, olderGRBDir);
                 logger.info(`Download ${olderGRBDir} successfully`);
+                let GRBDateString = remoteRunTimeSeg[0]; //format:yyyymmdd (e.g. 20190721)(UTC)
+                let startYear:number = parseInt(GRBDateString.slice(0,4));
+                let startMonth:number = parseInt(GRBDateString.slice(4,6))-1;
+                let startDay:number = parseInt(GRBDateString.slice(6));
+                let startHour = parseInt(remoteRunTimeSeg[1]); //format:yyyymmdd (e.g. 20190721)(UTC)
+                let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
+                logger.debug(`startDate: ${startDate}`);
                 let dataStatus = new DataStatus({
-                    dataType:"GRB",
-                    area:"EA",
-                    contentType:"CWB-WRF-3KM",
-                    path:olderGRBDir,
-                    status:"saved",
-                    byte:await CrawlerUtil.getFileSize(olderGRBDir)
+                    dataType: "GRB",
+                    area: "EA",
+                    contentType: "CWB-WRF-3KM",
+                    path: olderGRBDir,
+                    status: "saved",
+                    byte: await CrawlerUtil.getFileSize(olderGRBDir),
+                    startDate: startDate,
+                    endDate: startDate, //same as startDate (single)
+                    incrementHours: 0
                 });
                 await dataStatus.save();
                 logger.debug(`save ${JSON.stringify(dataStatus)} success.`)

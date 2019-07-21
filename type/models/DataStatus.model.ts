@@ -7,6 +7,9 @@ export interface IDataStatus extends Document {
   path: string;
   status:string;
   byte:number;
+  startDate:Date;
+  endDate:Date;
+  incrementHours:number;
   timeStamp: Date;
 }
 
@@ -17,8 +20,11 @@ let DataStatusSchema: Schema = new Schema({
   path: { type: String, required: true , index: true},
   status: {type: String, required: true , index: true},
   byte: {type: Number, required: true , index: true},
+  startDate: {type: Date, required: true , index: true},
+  endDate: {type: Date, required: true , index: true},
+  incrementHours: {type: Number, required: true , index: true},
   timeStamp: { type: Date , index: true}
-});
+},{collection: 'DataStatus'});
 
 DataStatusSchema.pre<IDataStatus>("save", function (next) {
   let now = new Date();

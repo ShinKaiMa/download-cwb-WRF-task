@@ -2,7 +2,7 @@ import * as path from 'path';
 import { envConfig } from '../config/config.env'
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
-import {DataStatus} from '../models/DataStatus.model';
+import {DataStatus,IDataStatus} from '../models/DataStatus.model';
 
 
 export class ScriptCaller {
@@ -53,13 +53,23 @@ export class ScriptCaller {
             let area = parsedIMGDir[parsedIMGDir.length-3];
             let contentType = parsedIMGDir[parsedIMGDir.length-2];
             logger.debug(`parsedIMGDir: ${parsedIMGDir}, area: ${area}, contentType: ${contentType}`);
+            let dateString = parsedIMGDir[5]; //example:20190721
+            let startYear:number = parseInt(dateString.slice(0,4));
+            let startMonth:number = parseInt(dateString.slice(4,6))-1;
+            let startDay:number = parseInt(dateString.slice(6));
+            let startHour = parseInt(parsedIMGDir[6]);
+            let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
+            logger.debug(`startDate: ${startDate}`);
             let dataStatus = new DataStatus({
               dataType:"IMG",
               area:area,
               contentType:contentType,
               path:outputIMGDirs[0],
               status:"saved",
-              byte:await CrawlerUtil.getFileSize(outputIMGDirs[0])
+              byte:await CrawlerUtil.getFileSize(outputIMGDirs[0]),
+              startDate:startDate,
+              endDate:pythonScriptDir.includes("{Final}")? new Date(startDate.getTime()+6*60*60*1000):startDate,
+              incrementHours:pythonScriptDir.includes("{Final}")? 6:0
           });
           await dataStatus.save();
           logger.debug(`save ${JSON.stringify(dataStatus)} success.`)
@@ -67,7 +77,6 @@ export class ScriptCaller {
             logger.info(`Skip command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
           }
         } catch (error) {
-          // TODO determine precip continue situ
           if (!pythonScriptDir.includes("{Final}")) {
             isGRBNotComplete = true;
             logger.error(`Exception encountered when using command: ${this.commandPrefix} ${pythonScriptDir}`);
@@ -87,9 +96,14 @@ export class ScriptCaller {
           let GRBSize = await CrawlerUtil.getFileSize(this.sourceGRBDir);
           logger.error(`${this.sourceGRBDir} size: ${GRBSize} bytes, maybe not complete size.`);
           await CrawlerUtil.remove(this.sourceGRBDir)
-          logger.error(`remove surce grib ${this.sourceGRBDir} success.`);
+          logger.error(`Remove surce grib ${this.sourceGRBDir} success.`);
+          logger.debug(`saving this.sourceGRBDir ${this.sourceGRBDir}.`);
+          let previuosGRBStatus:IDataStatus = await DataStatus.findOne({status:"saved",path:this.sourceGRBDir}).sort({timeStamp:-1}).exec();
+          previuosGRBStatus.status = "fail";
+          await previuosGRBStatus.save();
         } catch (error) {
-          logger.warn(`can not remove surce grib ${this.sourceGRBDir}.`);
+          logger.warn(`Error: ${error}`);
+          logger.warn(`Can not remove surce grib ${this.sourceGRBDir}, or can not log status to DB.`);
         }
       }
     }
