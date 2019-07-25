@@ -9,6 +9,7 @@ export interface IDataStatus extends Document {
   byte:number;
   startDate:Date;
   endDate:Date;
+  forcastHour:Number;
   incrementHours:number;
   timeStamp: Date;
 }
@@ -22,6 +23,7 @@ let DataStatusSchema: Schema = new Schema({
   byte: {type: Number, required: true , index: true},
   startDate: {type: Date, required: true , index: true},
   endDate: {type: Date, required: true , index: true},
+  forcastHour: {type: Number, required: true , index: true},
   incrementHours: {type: Number, required: true , index: true},
   timeStamp: { type: Date , index: true}
 },{collection: 'DataStatus'});

@@ -86,6 +86,7 @@ class CrawlGribDataWorker {
                 let startDay:number = parseInt(GRBDateString.slice(6));
                 let startHour = parseInt(localGRBTimePathSeg[localGRBTimePathSeg.length - 1]);
                 let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
+                let forcastHour = parseInt(this.targetHourString);
                 let dataStatus = new DataStatus({
                     dataType: "GRB",
                     area: "EA",
@@ -95,6 +96,7 @@ class CrawlGribDataWorker {
                     byte: await CrawlerUtil.getFileSize(localGRBDir),
                     startDate: startDate,
                     endDate: startDate, //same as startDate (single)
+                    forcastHour:forcastHour,
                     incrementHours: 0
                 });
                 await dataStatus.save();
@@ -120,6 +122,7 @@ class CrawlGribDataWorker {
                 let startMonth:number = parseInt(GRBDateString.slice(4,6))-1;
                 let startDay:number = parseInt(GRBDateString.slice(6));
                 let startHour = parseInt(remoteRunTimeSeg[1]); //format:yyyymmdd (e.g. 20190721)(UTC)
+                let forcastHour = parseInt(this.targetHourString);
                 let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
                 logger.debug(`startDate: ${startDate}`);
                 let dataStatus = new DataStatus({
@@ -131,6 +134,7 @@ class CrawlGribDataWorker {
                     byte: await CrawlerUtil.getFileSize(olderGRBDir),
                     startDate: startDate,
                     endDate: startDate, //same as startDate (single)
+                    forcastHour:forcastHour,
                     incrementHours: 0
                 });
                 await dataStatus.save();

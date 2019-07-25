@@ -60,4 +60,14 @@ db.once('open', async function () {
     // let previuosGRBStatus:IDataStatus = await DataStatus.findOne({status:"testStatus",path:"/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/GRB-repo/20190721/06/CWB_WRF_3KM_000.grb2"}).sort({timeStamp:-1}).exec();
     // console.log(previuosGRBStatus)
 
+    //ok, use local time stamp to query utc time stamp in mongodb
+    //in mongodb, can  use {timeStamp:{$gte:new ISODate('2019-07-25T14:00:00Z')}} to find (node.js (mongoose) not work in this way)
+    // let previuosGRBStatus:IDataStatus[] = await DataStatus.find({timeStamp:{$gte:new Date(2019,6,25,22)}}).exec();
+    // console.log(previuosGRBStatus);
+
+    //ok, use UTC time stamp to query utc time stamp in mongodb
+    let previuosGRBStatus:IDataStatus[] = await DataStatus.find({timeStamp:{$gte:new Date(Date.UTC(2019,6,25,14))}}).exec();
+    console.log(previuosGRBStatus);
+
+
     })

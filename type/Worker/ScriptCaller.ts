@@ -59,6 +59,7 @@ export class ScriptCaller {
             let startDay:number = parseInt(dateString.slice(6));
             let startHour = parseInt(parsedIMGDir[6]);
             let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
+            let forcastHour = parseInt(this.targetHourString);
             logger.debug(`startDate: ${startDate}`);
             let dataStatus = new DataStatus({
               dataType:"IMG",
@@ -69,6 +70,7 @@ export class ScriptCaller {
               byte:await CrawlerUtil.getFileSize(outputIMGDirs[0]),
               startDate:startDate,
               endDate:pythonScriptDir.includes("{Final}")? new Date(startDate.getTime()+6*60*60*1000):startDate,
+              forcastHour:forcastHour,
               incrementHours:pythonScriptDir.includes("{Final}")? 6:0
           });
           await dataStatus.save();
