@@ -9,7 +9,7 @@ import * as child_process from 'child_process';
 export class CrawlerUtil {
     public static async downloadFileToPath(url: string, localPath: string): Promise<void> {
         try {
-            let response = await axios.get(url, { responseType: "stream" });
+            let response = await axios.get(url, { responseType: "stream",headers:{'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'}});
             const writer = fs.createWriteStream(localPath)
             response.data.pipe(writer);
 
