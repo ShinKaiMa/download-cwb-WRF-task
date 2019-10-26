@@ -26,7 +26,7 @@ export class WeatherMapGenerator extends Worker {
     public async work() {
         let crawlGribDataWorker = new CrawlGribDataWorker({ targetHourString: this.targetHourString, localGRBRootRepoDir: this.localGRBRootRepoDir, authToken: this.authToken })
         let fetchedDir = await crawlGribDataWorker.fetchGRB();
-        let caller = new ScriptCaller("python", fetchedDir, this.targetHourString);
+        let caller = new ScriptCaller("python", "CWB WRF 3KM" ,fetchedDir, this.targetHourString);
         await caller.callRepoScripts();
     }
 

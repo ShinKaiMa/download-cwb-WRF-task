@@ -6,12 +6,14 @@ import {DataStatus,IDataStatus} from '../models/DataStatus.model';
 
 
 export class ScriptCaller {
-  constructor(commandPrefix: string, sourceGRBDir: string, targetHourString: string) {
+  constructor(commandPrefix: string, source:string, sourceGRBDir: string, targetHourString: string) {
     this.commandPrefix = commandPrefix;
+    this.source = source;
     this.sourceGRBDir = sourceGRBDir;
     this.targetHourString = targetHourString;
   }
   public commandPrefix: string;
+  private source:string;
   public sourceGRBDir: string;
   private targetHourString: string;
   private localPythonSourceCodeRootRepoDir = envConfig.localPythonSourceCodeRootRepoDir;
@@ -51,8 +53,8 @@ export class ScriptCaller {
             logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
             let parsedIMGDir = outputIMGDirs[0].split(path.sep);
             let area = parsedIMGDir[parsedIMGDir.length-3];
-            let contentType = parsedIMGDir[parsedIMGDir.length-2];
-            logger.debug(`parsedIMGDir: ${parsedIMGDir}, area: ${area}, contentType: ${contentType}`);
+            let dataType = parsedIMGDir[parsedIMGDir.length-2];
+            logger.debug(`parsedIMGDir: ${parsedIMGDir}, area: ${area}, dataType: ${dataType}`);
             let dateString = parsedIMGDir[5]; //example:20190721
             let startYear:number = parseInt(dateString.slice(0,4));
             let startMonth:number = parseInt(dateString.slice(4,6))-1;
@@ -62,9 +64,10 @@ export class ScriptCaller {
             let forcastHour = parseInt(this.targetHourString);
             logger.debug(`startDate: ${startDate}`);
             let dataStatus = new DataStatus({
-              dataType:"IMG",
+              source:this.source,
+              fileType:"IMG",
               area:area,
-              contentType:contentType,
+              dataType,
               path:outputIMGDirs[0],
               status:"saved",
               byte:await CrawlerUtil.getFileSize(outputIMGDirs[0]),

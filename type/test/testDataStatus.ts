@@ -9,12 +9,12 @@ db.on('error', (err)=>console.log(err));
 db.on('disconnected', ()=> mongoose.connect('mongodb://localhost:27017/test', { useCreateIndex: true, useNewUrlParser: true }));
 db.once('open', async function () {
 
-    let dataStatus = new DataStatus({
-        dataType:"GRB",
-        path:"testPath/13/12",
-        status:"saved",
-        byte:await CrawlerUtil.getFileSize("D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\IMG-repo\\20190716\\18\\nearTW\\windspeed\\CWB_WRF_3km_nearTW_10m_windSpeed_Init_20197161800_FcstH_066.png")
-    });
+    // let dataStatus = new DataStatus({
+    //     dataType:"GRB",
+    //     path:"testPath/13/12",
+    //     status:"saved",
+    //     byte:await CrawlerUtil.getFileSize("D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\IMG-repo\\20190716\\18\\nearTW\\windspeed\\CWB_WRF_3km_nearTW_10m_windSpeed_Init_20197161800_FcstH_066.png")
+    // });
 
     // dataStatus.save().then(()=>console.log("success")).catch((err)=>console.log(err));
     
@@ -66,8 +66,8 @@ db.once('open', async function () {
     // console.log(previuosGRBStatus);
 
     //ok, use UTC time stamp to query utc time stamp in mongodb
-    let previuosGRBStatus:IDataStatus[] = await DataStatus.find({timeStamp:{$gte:new Date(Date.UTC(2019,6,25,14))}}).exec();
-    console.log(previuosGRBStatus);
+    // let previuosGRBStatus:IDataStatus[] = await DataStatus.find({timeStamp:{$gte:new Date(Date.UTC(2019,6,25,14))}}).exec();
+    // console.log(previuosGRBStatus);
 
 
     })
