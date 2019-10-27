@@ -111,4 +111,12 @@ export class CrawlerUtil {
         scriptPaths = scriptPaths.filter(scriptPath=>!scriptPath.includes("{Final}"));
         return scriptPaths.concat(finalScriptsPath)
     }
+
+    public static extractDetailTypeFromScriptDir(scriptDir:string) : string{
+        let matched = scriptDir.match(/{Type_(.*)}/);
+        if(matched && matched.length>=2)
+            return matched[1];
+        
+        return '';
+    }
 }

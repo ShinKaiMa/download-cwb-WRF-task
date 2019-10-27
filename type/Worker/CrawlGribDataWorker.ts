@@ -88,6 +88,7 @@ class CrawlGribDataWorker {
                 let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
                 let forcastHour = parseInt(this.targetHourString);
                 let dataStatus = new DataStatus({
+                    source: "CWB WRF 3KM", //hard code tmp
                     fileType: "GRB",
                     area: "East Asia",
                     dataType: "CWB-WRF-3KM",
@@ -126,6 +127,7 @@ class CrawlGribDataWorker {
                 let startDate = new Date(Date.UTC(startYear,startMonth,startDay,startHour));
                 logger.debug(`startDate: ${startDate}`);
                 let dataStatus = new DataStatus({
+                    source: "CWB WRF 3KM", //hard code tmp
                     fileType: "GRB",
                     area: "East Asia",
                     dataType: "CWB-WRF-3KM",

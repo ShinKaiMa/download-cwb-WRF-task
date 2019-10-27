@@ -5,7 +5,7 @@ import { ScriptCaller } from './ScriptCaller'
 import { WorkerQueue } from '../WorkerQueue/WorkerQueue'
 import { envConfig } from '../config/config.env'
 import { generateKeyPair } from 'crypto';
-
+import * as path from 'path'
 
 /**
  * CrawlGribDataWorker and ScriptCaller dispatcher
@@ -26,7 +26,8 @@ export class WeatherMapGenerator extends Worker {
     public async work() {
         let crawlGribDataWorker = new CrawlGribDataWorker({ targetHourString: this.targetHourString, localGRBRootRepoDir: this.localGRBRootRepoDir, authToken: this.authToken })
         let fetchedDir = await crawlGribDataWorker.fetchGRB();
-        let caller = new ScriptCaller("python", "CWB WRF 3KM" ,fetchedDir, this.targetHourString);
+        let source = this.localPythonSourceCodeRootRepoDir.split(path.sep)[1]
+        let caller = new ScriptCaller("python", this.localPythonSourceCodeRootRepoDir.split(path.sep)[1], fetchedDir, this.targetHourString);
         await caller.callRepoScripts();
     }
 
@@ -43,7 +44,7 @@ export class WeatherMapGenerator extends Worker {
         })
     }
 
-    public toString(){
+    public toString() {
         return `Forcast Hour{${this.targetHourString}} Handler`;
     }
 }

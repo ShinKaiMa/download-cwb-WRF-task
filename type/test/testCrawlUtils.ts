@@ -26,8 +26,11 @@ async function test(){
     // let scriptsPath = ["/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/preccipitation/{Final}nearTW_CWB_WRF_3KM_850_Wind_Precip.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/temperature/{Final}nearTW_CWB_WRF_3KM_SUR_TEMP.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/vorticity/nearTW_CWB_WRF_3KM_700_VOR_BARB.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/nearTW/windspeed/nearTW_CWB_WRF_3KM_SUR_windSpeed.py","/media/sf_pygrib_playground_win/CWB-WRF-3KM-repo/Python-repo/TW/precipitation/TWArea_CWB_WRF_3KM_SUR_PRECIP_BARB.py"]
     // console.log(CrawlerUtil.ensurePrecipScriptsBeLast(scriptsPath))
 
-    let IMGDirs = await CrawlerUtil.getAllDir("D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\IMG-repo\\20190716\\18\\nearTW\\windspeed" + path.sep + "*000" + "*");
-    console.log(IMGDirs)
+    // let IMGDirs = await CrawlerUtil.getAllDir("D:\\python_workspace\\pygrib_playground\\CWB-WRF-3KM-repo\\IMG-repo\\20190716\\18\\nearTW\\windspeed" + path.sep + "*000" + "*");
+    // console.log(IMGDirs)
+
+    let deteailType = CrawlerUtil.extractDetailTypeFromScriptDir('D:\\Python_Workspace\\atmo-python-weathermap-generator\\src\\CWB WRF 3KM\\East Asia\\Preccipitation\\{Final}{Type_850hPa_Wind_&_Precip}East_Asia_CWB_WRF_3KM_850_Wind_Precip.py');
+    console.log(deteailType)
 }
 
 test()

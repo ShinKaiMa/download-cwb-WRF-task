@@ -5,6 +5,7 @@ export interface IDataStatus extends Document {
   fileType: string;
   area:string;
   dataType:string;
+  detailType:string;
   path: string;
   status:string;
   byte:number;
@@ -16,10 +17,11 @@ export interface IDataStatus extends Document {
 }
 
 let DataStatusSchema: Schema = new Schema({
-  source:{ type: String, required: true , index: true },
-  fileType: { type: String, required: true , index: true},
-  area:{ type: String, required: true , index: true},
-  dataType:{ type: String, required: true , index: true},
+  source:{ type: String, required: true , index: true }, //CWB WRF 3KM, GFS, ECMWF
+  fileType: { type: String, required: true , index: true}, // IMG, GRB
+  area:{ type: String, required: true , index: true}, // East Asia, TW
+  dataType:{ type: String, required: true , index: true}, //Precipitation,Wind,Temperature
+  detailType:{ type: String , index: true}, // 850hPa Wind & Precip
   path: { type: String, required: true , index: true},
   status: {type: String, required: true , index: true},
   byte: {type: Number, required: true , index: true},
