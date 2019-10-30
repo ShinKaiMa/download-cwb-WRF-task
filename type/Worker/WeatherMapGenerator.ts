@@ -3,7 +3,7 @@ import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { CrawlGribDataWorker } from './CrawlGribDataWorker'
 import { ScriptCaller } from './ScriptCaller'
 import { WorkerQueue } from '../WorkerQueue/WorkerQueue'
-import { envConfig } from '../config/config.env'
+import { cwbGribCrawlerConfig } from '../config/config.env'
 import { generateKeyPair } from 'crypto';
 import * as path from 'path'
 
@@ -16,18 +16,18 @@ export class WeatherMapGenerator extends Worker {
         if (!targetHourString) throw new Error("targetHourString is needed.")
         this.targetHourString = targetHourString;
     }
-    private authToken = envConfig.authToken;
+    private authToken = cwbGribCrawlerConfig.authToken;
     private targetHourString: string;
-    private localGRBRootRepoDir = envConfig.localGRBRootRepoDir;
-    private localIMGRootRepoDir = envConfig.localIMGRootRepoDir;
-    private localPythonSourceCodeRootRepoDir = envConfig.localPythonSourceCodeRootRepoDir;
-    private localPythonSourceCodeFilePattern = envConfig.localPythonSourceCodeFilePattern
+    private localGRBRootRepoDir = cwbGribCrawlerConfig.localGRBRootRepoDir;
+    private localIMGRootRepoDir = cwbGribCrawlerConfig.localIMGRootRepoDir;
+    private localPythonSourceCodeRootRepoDir = cwbGribCrawlerConfig.localPythonSourceCodeRootRepoDir;
+    private localPythonSourceCodeFilePattern = cwbGribCrawlerConfig.localPythonSourceCodeFilePattern
 
     public async work() {
         let crawlGribDataWorker = new CrawlGribDataWorker({ targetHourString: this.targetHourString, localGRBRootRepoDir: this.localGRBRootRepoDir, authToken: this.authToken })
         let fetchedDir = await crawlGribDataWorker.fetchGRB();
-        let source = this.localPythonSourceCodeRootRepoDir.split(path.sep)[1]
-        let caller = new ScriptCaller("python", this.localPythonSourceCodeRootRepoDir.split(path.sep)[1], fetchedDir, this.targetHourString);
+        let source = cwbGribCrawlerConfig.source;
+        let caller = new ScriptCaller("python", source, fetchedDir, this.targetHourString);
         await caller.callRepoScripts();
     }
 

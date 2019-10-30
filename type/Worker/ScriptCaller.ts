@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { envConfig } from '../config/config.env'
+import { cwbGribCrawlerConfig } from '../config/config.env'
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
 import { DataStatus, IDataStatus } from '../models/DataStatus.model';
@@ -17,8 +17,8 @@ export class ScriptCaller {
   private source: string;
   public sourceGRBDir: string;
   private targetHourString: string;
-  private localPythonSourceCodeRootRepoDir = envConfig.localPythonSourceCodeRootRepoDir;
-  private localPythonSourceCodeFilePattern = envConfig.localPythonSourceCodeFilePattern;
+  private localPythonSourceCodeRootRepoDir = cwbGribCrawlerConfig.localPythonSourceCodeRootRepoDir;
+  private localPythonSourceCodeFilePattern = cwbGribCrawlerConfig.localPythonSourceCodeFilePattern;
 
   public async callRepoScripts(): Promise<void> {
     logger.debug(`using ScriptCaller: prefix- ${this.commandPrefix}, source GRB directory: ${this.sourceGRBDir} , target hour string: ${this.targetHourString}`)
@@ -117,9 +117,9 @@ export class ScriptCaller {
   }
 
   public getIMGOutputDirByGRBDirAndScriptDir(GRBDir: string, ScriptDir: string) {
-    let GRB_ROOT_FileName_Array = envConfig.localGRBRootRepoDir.split(path.sep);
+    let GRB_ROOT_FileName_Array = cwbGribCrawlerConfig.localGRBRootRepoDir.split(path.sep);
     let GRB_ROOT_FileName = GRB_ROOT_FileName_Array[GRB_ROOT_FileName_Array.length - 1];
-    let IMG_ROOT_FileName_Array = envConfig.localIMGRootRepoDir.split(path.sep);
+    let IMG_ROOT_FileName_Array = cwbGribCrawlerConfig.localIMGRootRepoDir.split(path.sep);
     let IMG_ROOT_FileName = IMG_ROOT_FileName_Array[IMG_ROOT_FileName_Array.length - 1];
     let SCRIPT_ROOT_FileName_Array = ScriptDir.split(path.sep);
     let SCRIPT_ROOT_FileName = SCRIPT_ROOT_FileName_Array[SCRIPT_ROOT_FileName_Array.length - 3] + path.sep + SCRIPT_ROOT_FileName_Array[SCRIPT_ROOT_FileName_Array.length - 2];

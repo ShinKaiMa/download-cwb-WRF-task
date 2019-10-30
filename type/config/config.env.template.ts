@@ -1,5 +1,7 @@
 interface envConfig {
+    databaseURL?:string,
     authToken: string,
+    source: string,
     localGRBRootRepoDir: string,
     localIMGRootRepoDir: string,
     localPythonSourceCodeRootRepoDir: string,
@@ -11,7 +13,9 @@ interface envConfig {
 }
 
 let envConfig: envConfig = {
+    databaseURL: 'mongodb://localhost:27017/test',
     authToken: "your CWB open data token",
+    source:'CWB WRF 3KM',
     localGRBRootRepoDir: "your local GRIB file root repository directory to store CWB open data",
     localIMGRootRepoDir: "your local image file root repository directory",
     localPythonSourceCodeRootRepoDir: "your local python script file root repository directory",
