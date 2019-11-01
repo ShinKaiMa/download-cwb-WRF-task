@@ -1,4 +1,4 @@
-interface envConfig {
+export interface envConfig {
     databaseURL?:string,
     authToken: string,
     source: string,
@@ -12,7 +12,7 @@ interface envConfig {
     threadNum:number
 }
 
-let envConfig: envConfig = {
+let cwbGribCrawlerConfig: envConfig = {
     databaseURL: 'mongodb://localhost:27017/test',
     authToken: "your CWB open data token",
     source:'CWB WRF 3KM',
@@ -26,11 +26,11 @@ let envConfig: envConfig = {
 }
 
 let targetHourStrings: string[] = []
-for (let availableHour = 0; availableHour <= envConfig.maxHour; availableHour += envConfig.increment) {
+for (let availableHour = 0; availableHour <= cwbGribCrawlerConfig.maxHour; availableHour += cwbGribCrawlerConfig.increment) {
     targetHourStrings.push(availableHour.toString().padStart(3, "0"));
 }
 
-envConfig.targetHourStrings = targetHourStrings
+cwbGribCrawlerConfig.targetHourStrings = targetHourStrings
 
 
-export { envConfig }
+export { cwbGribCrawlerConfig }
