@@ -1,4 +1,4 @@
-export interface envConfig {
+interface gribCrawlerConfig {
     databaseURL?:string,
     authToken: string,
     source: string,
@@ -12,7 +12,7 @@ export interface envConfig {
     threadNum:number
 }
 
-let cwbGribCrawlerConfig: envConfig = {
+let cwbGribCrawlerConfig: gribCrawlerConfig = {
     databaseURL: 'mongodb://localhost:27017/test',
     authToken: "your CWB open data token",
     source:'CWB WRF 3KM',

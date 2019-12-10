@@ -51,7 +51,9 @@ export class ScriptCaller {
             await CrawlerUtil.execShellCommand(`${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`);
             logger.info(`Complete command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
             // get output image directory
-            let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + this.targetHourString + "*");
+            let estimateDetailType = CrawlerUtil.extractDetailTypeFromScriptDir(pythonScriptDir);
+            logger.debug(`estimateDetailType: ${estimateDetailType}`);
+            let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + this.targetHourString + "*");
             logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
             let parsedIMGDir = outputIMGDirs[0].split(path.sep);
             let area = parsedIMGDir[parsedIMGDir.length - 3];
