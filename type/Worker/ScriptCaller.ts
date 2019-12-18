@@ -53,8 +53,10 @@ export class ScriptCaller {
             // get output image directory
             let estimateDetailType = CrawlerUtil.extractDetailTypeFromScriptDir(pythonScriptDir);
             logger.debug(`estimateDetailType: ${estimateDetailType}`);
+            logger.debug(`getAllDir: ${IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + "FcstH_" + this.targetHourString + "*"}`);
             let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + "FcstH_" + this.targetHourString + "*");
             logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
+            // TODO: handle outputIMGDirs length == 0 situation
             let parsedIMGDir = outputIMGDirs[0].split(path.sep);
             let area = parsedIMGDir[parsedIMGDir.length - 3];
             let dataType = parsedIMGDir[parsedIMGDir.length - 2];
@@ -93,6 +95,7 @@ export class ScriptCaller {
             logger.error(error);
           } else {
             logger.debug(`skip determine var:isGRBNotComplete cause ${pythonScriptDir} includes "{Final}" (precip), var value: ${isGRBNotComplete} `);
+            logger.error(error);
           }
         }
       }
