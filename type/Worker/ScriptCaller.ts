@@ -3,7 +3,8 @@ import { cwbGribCrawlerConfig } from '../config/config.env'
 import { CrawlerUtil } from '../utils/CrawlerUtil';
 import { logger } from '../logger/logger';
 import { DataStatus, IDataStatus } from '../models/DataStatus.model';
-
+let { promisify } = require('util');
+let sizeOf = promisify(require('image-size'));
 
 export class ScriptCaller {
   //TODO input config without ...args
@@ -46,7 +47,7 @@ export class ScriptCaller {
               isNeedToSkip = true;
             }
           }
-          // start to draw
+          // going to draw weathermap
           if (!isNeedToSkip) {
             await CrawlerUtil.execShellCommand(`${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`);
             logger.info(`Complete command: ${this.commandPrefix} ${pythonScriptDir} ${this.sourceGRBDir} ${IMGOutputDir}`)
@@ -57,6 +58,10 @@ export class ScriptCaller {
             let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + "FcstH_" + this.targetHourString + "*");
             logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
             // TODO: handle outputIMGDirs length == 0 situation
+            let targetImagePath = outputIMGDirs[0];
+            const dimensions = await sizeOf(targetImagePath);
+
+
             let parsedIMGDir = outputIMGDirs[0].split(path.sep);
             let area = parsedIMGDir[parsedIMGDir.length - 3];
             let dataType = parsedIMGDir[parsedIMGDir.length - 2];
@@ -76,6 +81,8 @@ export class ScriptCaller {
               dataType,
               detailType: CrawlerUtil.extractDetailTypeFromScriptDir(pythonScriptDir),
               path: outputIMGDirs[0],
+              width: dimensions.width,
+              height: dimensions.height,
               status: "saved",
               byte: await CrawlerUtil.getFileSize(outputIMGDirs[0]),
               startDate: startDate,
