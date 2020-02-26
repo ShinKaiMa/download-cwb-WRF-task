@@ -56,6 +56,7 @@ export class ScriptCaller {
             logger.debug(`estimateDetailType: ${estimateDetailType}`);
             logger.debug(`getAllDir: ${IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + "FcstH_" + this.targetHourString + "*"}`);
             let outputIMGDirs = await CrawlerUtil.getAllDir(IMGOutputDir + path.sep + "*" + estimateDetailType + "*" + "FcstH_" + this.targetHourString + "*");
+            // TODO: handle got old grib () from CWB open data,  outputIMGDirs maybe empty while previous grib data is deleted.
             logger.debug(`estimate IMGDirs: ${outputIMGDirs}`)
             // TODO: handle outputIMGDirs length == 0 situation
             let targetImagePath = outputIMGDirs[0];
